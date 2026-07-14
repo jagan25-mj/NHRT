@@ -315,7 +315,7 @@ def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, glo
 
 
 def evaluate(config: PretrainConfig, train_state: TrainState, eval_loader: torch.utils.data.DataLoader, eval_metadata: PuzzleDatasetMetadata, rank: int, world_size: int):
-    with torch.inference_mode():
+    with torch.no_grad():
         set_ids = {k: idx for idx, k in enumerate(eval_metadata.sets)}
         
         all_preds = {}
