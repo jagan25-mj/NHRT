@@ -3,7 +3,11 @@ import yaml
 import os
 
 import torch
+torch.backends.cuda.enable_flash_sdp(False)
+torch.backends.cuda.enable_mem_efficient_sdp(False)
 import torch.distributed as dist
+torch.backends.cuda.enable_flash_sdp(False)
+torch.backends.cuda.enable_mem_efficient_sdp(False)
 
 import pydantic
 from omegaconf import OmegaConf

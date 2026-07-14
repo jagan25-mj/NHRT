@@ -6,7 +6,11 @@ import yaml
 import shutil
 
 import torch
+torch.backends.cuda.enable_flash_sdp(False)
+torch.backends.cuda.enable_mem_efficient_sdp(False)
 import torch.distributed as dist
+torch.backends.cuda.enable_flash_sdp(False)
+torch.backends.cuda.enable_mem_efficient_sdp(False)
 from torch import nn
 from torch.utils.data import DataLoader
 
@@ -23,6 +27,8 @@ from utils.functions import load_model_class, get_model_source_path
 from models.sparse_embedding import CastedSparseEmbeddingSignSGD_Distributed
 from models.layers import CastedLinear
 import torch.nn.functional as F
+torch.backends.cuda.enable_flash_sdp(False)
+torch.backends.cuda.enable_mem_efficient_sdp(False)
 
 original_casted_linear_forward = CastedLinear.forward
 
