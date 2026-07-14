@@ -198,6 +198,6 @@ OMP_NUM_THREADS=8 torchrun --nproc-per-node 8 evaluate.py checkpoint=<CHECKPOINT
 
 | Date | Puzzle Type | Work Done / Model | Evaluation Results (Accuracy) | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **July 13, 2026** | **6x6 Sudoku** | Dataset Generation & Model Evaluation | *Pending / Please Update* | Evaluated using `kaggle_hrm_6x6.ipynb` |
-| **July 13, 2026** | **9x9 Sudoku** | Model Evaluation (Flat Model) | *Pending / Please Update* | Evaluated using `kaggle_hrm_flat.ipynb` |
+| **July 13, 2026** | **6x6 Sudoku** | Dataset Generation & Model Evaluation | *Failed (12h Timeout)* | Kaggle execution exceeded 12h limit (Exit 137) |
+| **July 13, 2026** | **9x9 Sudoku** | Model Evaluation (Flat Model) | *Failed (12h Timeout)* | Kaggle execution exceeded 12h limit (Exit 137) |
 
