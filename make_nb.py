@@ -43,7 +43,7 @@ notebook = {
                 "    q = q.transpose(1, 2)\n",
                 "    k = k.transpose(1, 2)\n",
                 "    v = v.transpose(1, 2)\n",
-                "    out = F.scaled_dot_product_attention(q, k, v, is_causal=causal)\n",
+                "    out = F.scaled_dot_product_attention(q.contiguous(), k.contiguous(), v.contiguous(), is_causal=causal)\n",
                 "    return out.transpose(1, 2).contiguous()\n",
                 "'''\n",
                 "with open('models/layers.py', 'r') as f:\n",

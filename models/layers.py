@@ -16,7 +16,7 @@ except ImportError:
             q = q.transpose(1, 2)
             k = k.transpose(1, 2)
             v = v.transpose(1, 2)
-            out = F.scaled_dot_product_attention(q, k, v, is_causal=causal)
+            out = F.scaled_dot_product_attention(q.contiguous(), k.contiguous(), v.contiguous(), is_causal=causal)
             return out.transpose(1, 2).contiguous()
 
 from models.common import trunc_normal_init_
