@@ -16,7 +16,17 @@ except ImportError:
             q = q.transpose(1, 2)
             k = k.transpose(1, 2)
             v = v.transpose(1, 2)
-            out = F.scaled_dot_product_attention(q.contiguous(), k.contiguous(), v.contiguous(), is_causal=causal)
+            
+            # Manual attention to avoid PyTorch SDPA bugs on T4
+            L = q.size(-2)
+            scale = q.size(-1) ** -0.5
+            attn = (q @ k.transpose(-2, -1)) * scale
+            if causal:
+                mask = torch.ones(L, L, dtype=torch.bool, device=q.device).tril(diagonal=0)
+                attn.masked_fill_(~mask, float('-inf'))
+            attn = F.softmax(attn, dim=-1)
+            out = attn @ v
+            
             return out.transpose(1, 2).contiguous()
 
 from models.common import trunc_normal_init_
