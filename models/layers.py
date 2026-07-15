@@ -17,7 +17,13 @@ except ImportError:
             k = k.transpose(1, 2)
             v = v.transpose(1, 2)
             
-            # Manual attention to avoid PyTorch SDPA bugs on T4
+            # Cast to float32 to avoid bfloat16 cuBLAS bugs on Turing (T4)
+            orig_dtype = q.dtype
+            q = q.to(torch.float32)
+            k = k.to(torch.float32)
+            v = v.to(torch.float32)
+            
+            # Manual attention
             L = q.size(-2)
             scale = q.size(-1) ** -0.5
             attn = (q @ k.transpose(-2, -1)) * scale
@@ -27,6 +33,7 @@ except ImportError:
             attn = F.softmax(attn, dim=-1)
             out = attn @ v
             
+            out = out.to(orig_dtype)
             return out.transpose(1, 2).contiguous()
 
 from models.common import trunc_normal_init_
@@ -65,17 +72,25 @@ class CastedLinear(nn.Module):
                  out_features: int,
                  bias: bool):
         super().__init__()
-        # Truncated LeCun normal init
         self.weight = nn.Parameter(
             trunc_normal_init_(torch.empty((out_features, in_features)), std=1.0 / (in_features ** 0.5))
         )
         self.bias = None
         if bias:
-            # Zero init bias
             self.bias = nn.Parameter(torch.zeros((out_features, )))
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return F.linear(input, self.weight.to(input.dtype), bias=self.bias.to(input.dtype) if self.bias is not None else None)
+        orig_dtype = input.dtype
+        # T4 GPUs (Turing) do not have hardware bfloat16 and their cuBLAS emulation is very buggy in eval mode.
+        # Cast to float32 before F.linear to prevent CUBLAS_STATUS_EXECUTION_FAILED and device-side asserts.
+        if orig_dtype == torch.bfloat16:
+            input_f32 = input.to(torch.float32)
+            weight_f32 = self.weight.to(torch.float32)
+            bias_f32 = self.bias.to(torch.float32) if self.bias is not None else None
+            out = F.linear(input_f32, weight_f32, bias=bias_f32)
+            return out.to(orig_dtype)
+        else:
+            return F.linear(input, self.weight.to(orig_dtype), bias=self.bias.to(orig_dtype) if self.bias is not None else None)
 
 
 class CastedEmbedding(nn.Module):
