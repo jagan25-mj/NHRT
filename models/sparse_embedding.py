@@ -26,6 +26,10 @@ class CastedSparseEmbedding(nn.Module):
         self.local_ids = nn.Buffer(torch.zeros(batch_size, dtype=torch.int32), persistent=False)
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        # Clamp indices to valid range to prevent OOB access from padded puzzle identifiers
+        # (padding uses blank_identifier_id which may exceed num_embeddings)
+        inputs = inputs.clamp(max=self.weights.shape[0] - 1)
+
         if not self.training:
             # Test mode, no gradient
             return self.weights[inputs].to(self.cast_to)

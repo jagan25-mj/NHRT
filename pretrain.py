@@ -117,7 +117,7 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
 
         vocab_size=train_metadata.vocab_size,
         seq_len=train_metadata.seq_len,
-        num_puzzle_identifiers=train_metadata.num_puzzle_identifiers,
+        num_puzzle_identifiers=max(train_metadata.num_puzzle_identifiers, train_metadata.blank_identifier_id + 1),
         causal=False  # Non-autoregressive
     )
 
