@@ -4,7 +4,7 @@ import json
 def get_all_files():
     files_to_include = []
     for root, dirs, files in os.walk('.'):
-        if 'venv' in root or '.git' in root or '__pycache__' in root or '.vscode' in root or 'scratch' in root:
+        if 'venv' in root or '.git' in root or '__pycache__' in root or '.vscode' in root or 'scratch' in root or 'checkpoints' in root:
             continue
         for file in files:
             if file.endswith('.py') or file.endswith('.yaml') or file == 'requirements.txt':
