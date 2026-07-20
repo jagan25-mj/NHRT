@@ -103,6 +103,7 @@ class PretrainConfig(pydantic.BaseModel):
     project_name: Optional[str] = None
     run_name: Optional[str] = None
     checkpoint_path: Optional[str] = None
+    resume_checkpoint: Optional[str] = None
 
     # Extras
     seed: int = 0
@@ -227,8 +228,28 @@ def init_train_state(config: PretrainConfig, train_metadata: PuzzleDatasetMetada
     # Model
     model, optimizers, optimizer_lrs = create_model(config, train_metadata, world_size=world_size)
 
+    step = 0
+    if config.resume_checkpoint is not None:
+        print(f"Resuming checkpoint from {config.resume_checkpoint}...")
+        state_dict = torch.load(config.resume_checkpoint, map_location="cpu", weights_only=True)
+        clean_state_dict = {k.replace("_orig_mod.", ""): v for k, v in state_dict.items()}
+        model.load_state_dict(clean_state_dict, strict=False)
+        print("Resume Checkpoint loaded.")
+        
+        import os
+        filename = os.path.basename(config.resume_checkpoint)
+        if 'step_' in filename:
+            step = int(filename.split('_')[-1])
+            print(f"Resumed at step: {step}")
+            
+        if world_size > 1:
+            import torch.distributed as dist
+            with torch.no_grad():
+                for param in list(model.parameters()) + list(model.buffers()):
+                    dist.broadcast(param, src=0)
+
     return TrainState(
-        step=0,
+        step=step,
         total_steps=total_steps,
 
         model=model,
@@ -461,17 +482,22 @@ def launch(hydra_config: DictConfig):
     # Train state
     train_state = init_train_state(config, train_metadata, world_size=WORLD_SIZE)
 
+    start_iter_id = 0
+    if train_state.step > 0:
+        steps_per_iter = int(train_epochs_per_iter * train_metadata.total_groups * train_metadata.mean_puzzle_examples / config.global_batch_size)
+        start_iter_id = train_state.step // steps_per_iter
+
     # Progress bar and logger
     progress_bar = None
     if RANK == 0:
-        progress_bar = tqdm.tqdm(total=train_state.total_steps)
+        progress_bar = tqdm.tqdm(total=train_state.total_steps, initial=train_state.step)
 
         wandb.init(project=config.project_name, name=config.run_name, config=config.model_dump(), settings=wandb.Settings(_disable_stats=True))  # type: ignore
-        wandb.log({"num_params": sum(x.numel() for x in train_state.model.parameters())}, step=0)
+        wandb.log({"num_params": sum(x.numel() for x in train_state.model.parameters())}, step=train_state.step)
         save_code_and_config(config)
 
     # Training Loop
-    for _iter_id in range(total_iters):
+    for _iter_id in range(start_iter_id, total_iters):
         print (f"[Rank {RANK}, World Size {WORLD_SIZE}]: Epoch {_iter_id * train_epochs_per_iter}")
 
         ############ Train Iter
