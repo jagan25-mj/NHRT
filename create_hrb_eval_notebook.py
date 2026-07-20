@@ -203,6 +203,7 @@ notebook = {
                 "\n",
                 "config.eval_save_outputs = ['logits']\n",
                 "config.checkpoint_path = work_ckpt_dir\n",
+                "config.load_checkpoint = None\n",
                 "\n",
                 "# Override data_path to the 6x6 sudoku dataset we just built\n",
                 "config.data_path = 'data/sudoku-6x6'\n",
