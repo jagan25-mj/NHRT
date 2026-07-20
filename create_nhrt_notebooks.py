@@ -7,7 +7,7 @@ def get_all_files():
         if 'venv' in root or '.git' in root or '__pycache__' in root or '.vscode' in root or 'scratch' in root:
             continue
         for file in files:
-            if file.endswith('.py') or file.endswith('.yaml') or file.endswith('.txt'):
+            if file.endswith('.py') or file.endswith('.yaml') or file == 'requirements.txt':
                 if file in ['create_notebook.py', 'create_flat_notebook.py', 'create_6x6_notebook.py', 'create_nhrt_notebooks.py']:
                     continue
                 files_to_include.append(os.path.join(root, file).replace('\\', '/').removeprefix('./'))
