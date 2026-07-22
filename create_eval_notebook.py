@@ -1,0 +1,81 @@
+import json
+import os
+
+nb = {
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": None,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!git clone https://github.com/jagan25-mj/NHRT.git\n",
+    "%cd NHRT"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": None,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!python dataset/build_6x6_sudoku_dataset.py"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": None,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import glob\n",
+    "\n",
+    "# In Kaggle, attached notebook outputs usually appear in /kaggle/input/\n",
+    "# Let's search for the highest step checkpoint in /kaggle/input/\n",
+    "checkpoint_files = glob.glob('/kaggle/input/**/step_*', recursive=True)\n",
+    "checkpoint_files = [f for f in checkpoint_files if 'all_preds' not in f]\n",
+    "\n",
+    "if not checkpoint_files:\n",
+    "    print('No checkpoints found! Make sure you attached the output of the previous notebook.')\n",
+    "else:\n",
+    "    # Sort by step number\n",
+    "    def extract_step(f):\n",
+    "        basename = os.path.basename(f)\n",
+    "        return int(basename.replace('step_', ''))\n",
+    "    \n",
+    "    latest_checkpoint = max(checkpoint_files, key=extract_step)\n",
+    "    print(f'Found checkpoint: {latest_checkpoint}')\n",
+    "    \n",
+    "    # Run evaluation\n",
+    "    cmd = f'python evaluate.py checkpoint=\"{latest_checkpoint}\"'\n",
+    "    print(f'Running: {cmd}')\n",
+    "    os.system(cmd)\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
+
+with open('kaggle_evaluate_6x6.ipynb', 'w') as f:
+    json.dump(nb, f, indent=1)

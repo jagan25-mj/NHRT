@@ -113,9 +113,24 @@ def generate_notebook(arch_name, nb_filename, title):
             "outputs": [],
             "source": [
                 "import os\n",
+                "import glob\n",
                 "os.environ['WANDB_MODE'] = 'offline'\n",
                 "\n",
-                "!python finetune_lora.py \\\n",
+                "checkpoint_files = glob.glob('/kaggle/input/**/step_*', recursive=True)\n",
+                "checkpoint_files = [f for f in checkpoint_files if 'all_preds' not in f]\n",
+                "resume_arg = ''\n",
+                "if checkpoint_files:\n",
+                "    def extract_step(f):\n",
+                "        try:\n",
+                "            return int(os.path.basename(f).replace('step_', ''))\n",
+                "        except ValueError:\n",
+                "            return -1\n",
+                "    \n",
+                "    latest_checkpoint = max(checkpoint_files, key=extract_step)\n",
+                "    print(f'\\nFound previous Kaggle output! Resuming from checkpoint: {latest_checkpoint}\\n')\n",
+                "    resume_arg = f'resume_checkpoint={latest_checkpoint}'\n",
+                "\n",
+                "cmd = f\"\"\"python finetune_lora.py \\\n",
                 f"    arch={arch_name} \\\n",
                 "    data_path=data/sudoku-6x6 \\\n",
                 "    epochs=5000 \\\n",
@@ -126,7 +141,10 @@ def generate_notebook(arch_name, nb_filename, title):
                 "    puzzle_emb_lr=7e-5 \\\n",
                 "    weight_decay=1.0 \\\n",
                 "    puzzle_emb_weight_decay=1.0 \\\n",
-                "    +load_checkpoint=checkpoints/HRM-checkpoint-sudoku-extreme/checkpoint\n"
+                "    +load_checkpoint=checkpoints/HRM-checkpoint-sudoku-extreme/checkpoint \\\n",
+                "    {resume_arg}\"\"\"\n",
+                "\n",
+                "!{cmd}\n"
             ]
         },
         {
