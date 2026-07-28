@@ -32,7 +32,8 @@ def launch():
     with open(os.path.join(os.path.dirname(eval_cfg.checkpoint), "all_config.yaml"), "r") as f:
         config = PretrainConfig(**yaml.safe_load(f))
         config.eval_save_outputs = eval_cfg.save_outputs
-        config.checkpoint_path = os.path.dirname(eval_cfg.checkpoint)
+        # Save evaluation predictions to a writable directory, not the read-only input path
+        config.checkpoint_path = "./eval_outputs"
         
         # WE ALREADY HAVE THE FULL CHECKPOINT, NO NEED TO LOAD BASE
         config.load_checkpoint = None
