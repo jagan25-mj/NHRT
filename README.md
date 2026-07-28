@@ -201,4 +201,5 @@ OMP_NUM_THREADS=8 torchrun --nproc-per-node 8 evaluate.py checkpoint=<CHECKPOINT
 | **July 13, 2026** | **9x9 Sudoku** | LoRA Fine-Tuning (base HRM checkpoint) | *Failed (12h Timeout)* | Kaggle timed out at 43200s (Exit 137). Root cause: dataset build (1000×1000 aug) consumed all 12h before training started |
 | **July 14, 2026** | **9x9 Sudoku** | LoRA Fine-Tuning (optimized) | *Pending — run `kaggle_finetune_9x9.ipynb`* | Reduced dataset to 500×100 aug. LoRA rank=8, 4 epochs, batch=8. Est. runtime: ~3-4h. OOB bug fixed. |
 | **July 16, 2026** | **6x6 Sudoku** | Training from Scratch (27M params) | **Cell: 92.22% · Puzzle: 53.00%** | 1000 train puzzles, 5000 epochs (78,125 steps), batch=64. Runtime: 9h17m on T4 GPU. CUDA OOB bug in eval padding fixed. |
+| **July 28, 2026** | **6x6 Sudoku** | ACT-2 LoRA Fine-Tuning | **Cell: 82.94% · Puzzle: 11.00%** | Fine-tuned base model using LoRA (rank 8). Completed 6,248 steps. Q-Halt Acc: 86%. LM Loss: 0.564. Fixed CPU/CUDA device mismatches in evaluate script. |
 
