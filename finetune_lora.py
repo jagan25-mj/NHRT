@@ -163,7 +163,7 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
     model_cls = load_model_class(config.arch.name)
     loss_head_cls = load_model_class(config.arch.loss.name)
 
-    with torch.device("cpu"):
+    with torch.device("cuda"):
         model: nn.Module = model_cls(model_cfg)
         model = loss_head_cls(model, **config.arch.loss.__pydantic_extra__)  # type: ignore
         if "DISABLE_COMPILE" not in os.environ:
@@ -177,7 +177,7 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
 
     if config.load_checkpoint is not None:
         print(f"Loading checkpoint from {config.load_checkpoint}...")
-        state_dict = torch.load(config.load_checkpoint, map_location="cpu")
+        state_dict = torch.load(config.load_checkpoint, map_location="cuda")
         clean_state_dict = {k.replace("_orig_mod.", ""): v for k, v in state_dict.items()}
         model.load_state_dict(clean_state_dict, strict=False)
         print("Checkpoint loaded.")
@@ -231,7 +231,7 @@ def init_train_state(config: PretrainConfig, train_metadata: PuzzleDatasetMetada
     step = 0
     if config.resume_checkpoint is not None:
         print(f"Resuming checkpoint from {config.resume_checkpoint}...")
-        state_dict = torch.load(config.resume_checkpoint, map_location="cpu", weights_only=True)
+        state_dict = torch.load(config.resume_checkpoint, map_location="cuda", weights_only=True)
         clean_state_dict = {k.replace("_orig_mod.", ""): v for k, v in state_dict.items()}
         model.load_state_dict(clean_state_dict, strict=False)
         print("Resume Checkpoint loaded.")
@@ -284,11 +284,11 @@ def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, glo
         return
 
     # To device
-    batch = {k: v.cpu() for k, v in batch.items()}
+    batch = {k: v.cuda() for k, v in batch.items()}
 
     # Init carry if it is None
     if train_state.carry is None:
-        with torch.device("cpu"):
+        with torch.device("cuda"):
             train_state.carry = train_state.model.initial_carry(batch)  # type: ignore
 
     # Forward
@@ -348,8 +348,8 @@ def evaluate(config: PretrainConfig, train_state: TrainState, eval_loader: torch
         carry = None
         for set_name, batch, global_batch_size in eval_loader:
             # To device
-            batch = {k: v.cpu() for k, v in batch.items()}
-            with torch.device("cpu"):
+            batch = {k: v.cuda() for k, v in batch.items()}
+            with torch.device("cuda"):
                 carry = train_state.model.initial_carry(batch)  # type: ignore
 
             # Forward
@@ -372,7 +372,7 @@ def evaluate(config: PretrainConfig, train_state: TrainState, eval_loader: torch
             
             if metric_values is None:
                 metric_keys = list(sorted(metrics.keys()))  # Sort keys to guarantee all processes use the same order.
-                metric_values = torch.zeros((len(set_ids), len(metrics.values())), dtype=torch.float32, device="cpu")
+                metric_values = torch.zeros((len(set_ids), len(metrics.values())), dtype=torch.float32, device="cuda")
                 
             metric_values[set_id] += torch.stack([metrics[k] for k in metric_keys])
             metric_global_batch_size[set_id] += global_batch_size
@@ -462,7 +462,7 @@ def launch(hydra_config: DictConfig):
         RANK = dist.get_rank()
         WORLD_SIZE = dist.get_world_size()
 
-        #torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
+        torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
         
     # Load sync'ed config
     config = load_synced_config(hydra_config, rank=RANK, world_size=WORLD_SIZE)
