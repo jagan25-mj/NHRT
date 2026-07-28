@@ -34,7 +34,7 @@ new_source = [
     "    latest_checkpoint = max(checkpoint_files, key=extract_step)\n",
     "    print(f'\\nFound checkpoint: {latest_checkpoint}')\n",
     "    \n",
-    "    cmd = f'python evaluate.py checkpoint=\"{latest_checkpoint}\"'\n",
+    "    cmd = f'python evaluate_lora.py checkpoint=\"{latest_checkpoint}\"'\n",
     "    print(f'Running: {cmd}')\n",
     "    os.system(cmd)\n"
 ]
