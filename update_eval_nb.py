@@ -8,7 +8,7 @@ with open('kaggle_evaluate_6x6.ipynb', 'r') as f:
 nb['cells'][0]['source'] = [
     "!git clone https://github.com/jagan25-mj/NHRT.git\n",
     "%cd NHRT\n",
-    "!pip install -r requirements.txt"
+    "!pip install -r requirements.txt peft huggingface_hub wandb"
 ]
 
 # Cell 2: add debug info
